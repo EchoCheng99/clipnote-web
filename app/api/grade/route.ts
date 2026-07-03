@@ -45,6 +45,8 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         model: "deepseek-v4-flash",
+	max_tokens: 3000,
+	response_format: { type: "json_object" },
         messages: [
           { role: "system", content: sys },
           { role: "user", content: user_prompt }
