@@ -17,11 +17,12 @@ export async function POST(req: Request) {
 
   const { data: settings } = await supabase
     .from("user_settings")
-    .select("deepseek_api_key")
+    .select("deepseek_api_key, model_preference")
     .eq("user_id", user.id)
     .maybeSingle();
 
   const apiKey = settings?.deepseek_api_key;
+  const model = settings?.model_preference || "deepseek-v4-flash";
   if (!apiKey) {
     return NextResponse.json(
       { error: "还没配置 DeepSeek API Key，请先去设置页填写" },
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "deepseek-v4-flash",
+        model,
         max_tokens: 1500,
         response_format: { type: "json_object" },
         messages: [

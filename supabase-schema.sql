@@ -26,7 +26,8 @@ create table if not exists sessions (
 
 create table if not exists user_settings (
   user_id uuid primary key references auth.users not null,
-  deepseek_api_key text
+  deepseek_api_key text,
+  model_preference text default 'deepseek-v4-flash'
 );
 
 create table if not exists articles (
