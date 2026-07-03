@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const tabs = [
+  { href: "/reading", label: "精读" },
   { href: "/library", label: "表达库" },
   { href: "/practice", label: "练习" },
   { href: "/history", label: "记录" },

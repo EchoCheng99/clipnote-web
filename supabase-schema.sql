@@ -29,10 +29,19 @@ create table if not exists user_settings (
   deepseek_api_key text
 );
 
+create table if not exists articles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users not null,
+  title text,
+  content text,
+  created_at timestamptz default now()
+);
+
 -- 开启行级安全(RLS)，保证每个人只能读写自己的数据
 alter table expressions enable row level security;
 alter table sessions enable row level security;
 alter table user_settings enable row level security;
+alter table articles enable row level security;
 
 create policy "own expressions" on expressions
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -41,4 +50,7 @@ create policy "own sessions" on sessions
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "own settings" on user_settings
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "own articles" on articles
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

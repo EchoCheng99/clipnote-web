@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/library") ||
     request.nextUrl.pathname.startsWith("/practice") ||
     request.nextUrl.pathname.startsWith("/history") ||
+    request.nextUrl.pathname.startsWith("/reading") ||
     request.nextUrl.pathname.startsWith("/settings");
 
   if (!user && isProtected) {
