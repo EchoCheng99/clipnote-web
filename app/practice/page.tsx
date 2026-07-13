@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Nav from "@/components/Nav";
 import { createClient } from "@/lib/supabase/client";
 
-type Expr = { id: string; en: string; zh: string; status: string; review_count: number };
+type Expr = { id: string; en: string; zh: string; example: string | null; tag: string | null; status: string; review_count: number };
 type Feedback = {
   overall_score: number;
   grammar_score: number;
@@ -31,13 +31,18 @@ export default function PracticePage() {
   useEffect(() => {
     supabase
       .from("expressions")
-      .select("id, en, zh, status, review_count")
+      .select("id, en, zh, example, tag, status, review_count")
       .order("added_at", { ascending: false })
       .then(({ data }) => data && setItems(data as Expr[]));
   }, []);
 
   function togglePick(id: string) {
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  }
+  const [tooltipId, setTooltipId] = useState<string | null>(null);
+  function handleChipClick(id: string) {
+    togglePick(id);
+    setTooltipId((prev) => (prev === id ? null : id));
   }
   function pickRandom() {
     const pool = [...items.map((e) => e.id)].sort(() => Math.random() - 0.5);
@@ -145,26 +150,76 @@ export default function PracticePage() {
             清空选择
           </button>
         </div>
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="mb-4">
           {items.length === 0 && (
             <p className="font-voice italic text-inkfaint text-sm">
               先去"表达库"贴几条剪报吧。
             </p>
           )}
-          {items.map((ex) => (
-            <span
-              key={ex.id}
-              onClick={() => togglePick(ex.id)}
-              className={
-                "font-voice text-sm px-3 py-1.5 rounded-full border cursor-pointer " +
-                (picked.includes(ex.id)
-                  ? "bg-highlightsoft border-highlight font-semibold"
-                  : "bg-white border-linestrong text-inksoft")
-              }
-            >
-              {ex.en}
-            </span>
-          ))}
+          {(() => {
+            const groups: Record<string, Expr[]> = {};
+            items.forEach((ex) => {
+              const key = ex.tag || "未分类";
+              if (!groups[key]) groups[key] = [];
+              groups[key].push(ex);
+            });
+            const tagNames = Object.keys(groups).sort((a, b) => {
+              if (a === "未分类") return 1;
+              if (b === "未分类") return -1;
+              return a.localeCompare(b, "zh-CN");
+            });
+            return tagNames.map((tagName) => (
+              <div key={tagName} className="mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-mono text-[11px] bg-tealsoft text-teal px-2 py-0.5 rounded-full">
+                    {tagName}
+                  </span>
+                  <span className="text-[11px] text-inkfaint">{groups[tagName].length} 条</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {groups[tagName].map((ex) => (
+                    <span key={ex.id} className="relative inline-block">
+                      <span
+                        onClick={() => handleChipClick(ex.id)}
+                        className={
+                          "font-voice text-sm px-3 py-1.5 rounded-full border cursor-pointer inline-block " +
+                          (picked.includes(ex.id)
+                            ? "bg-highlightsoft border-highlight font-semibold"
+                            : "bg-white border-linestrong text-inksoft")
+                        }
+                      >
+                        {ex.en}
+                      </span>
+                      {tooltipId === ex.id && (
+                        <div className="absolute z-20 top-full left-0 mt-2 w-64 bg-card border border-linestrong rounded-lg shadow-2xl p-3">
+                          <div className="flex justify-between items-start gap-2 mb-1">
+                            <p className="text-sm text-inksoft font-medium">{ex.zh}</p>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setTooltipId(null);
+                              }}
+                              className="text-inkfaint hover:text-redpen text-xs leading-none flex-shrink-0"
+                              aria-label="关闭"
+                            >
+                              ×
+                            </button>
+                          </div>
+                          {ex.example ? (
+                            <p className="font-voice italic text-xs text-inkfaint border-l-2 border-linestrong pl-2 mt-2">
+                              {ex.example}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-inkfaint mt-2">还没有例句</p>
+                          )}
+                        </div>
+                      )}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
         <button className="btn-primary bg-teal border-teal" onClick={generateScenario} disabled={genLoading}>
           {genLoading ? "生成中…" : "生成中文场景"}

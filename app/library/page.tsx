@@ -133,35 +133,55 @@ export default function LibraryPage() {
           还没有剪报——把今天精读文章里的表达贴进来吧。
         </p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {items.map((ex) => (
-            <div key={ex.id} className="clip-card p-4 relative">
-              <button
-                onClick={() => deleteExpr(ex.id)}
-                className="absolute top-2 right-2 text-inkfaint hover:text-redpen"
-                aria-label="删除"
-              >
-                ×
-              </button>
-              <div className="font-voice text-lg font-semibold">{ex.en}</div>
-              <div className="text-sm text-inksoft mt-1 mb-2">{ex.zh}</div>
-              {ex.example && (
-                <p className="font-voice italic text-xs text-inkfaint border-l-2 border-linestrong pl-2 mb-3">
-                  {ex.example}
-                </p>
-              )}
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[10.5px] bg-tealsoft text-teal px-2 py-0.5 rounded-full">
-                  {ex.tag}
+        (() => {
+          const groups: Record<string, Expr[]> = {};
+          items.forEach((ex) => {
+            const key = ex.tag || "未分类";
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(ex);
+          });
+          const tagNames = Object.keys(groups).sort((a, b) => {
+            if (a === "未分类") return 1;
+            if (b === "未分类") return -1;
+            return a.localeCompare(b, "zh-CN");
+          });
+          return tagNames.map((tagName) => (
+            <div key={tagName} className="mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="font-mono text-xs bg-tealsoft text-teal px-2.5 py-1 rounded-full">
+                  {tagName}
                 </span>
-                <span className="font-mono text-[10.5px] text-inkfaint flex items-center gap-1">
-                  <span className={"w-1.5 h-1.5 rounded-full " + dotColor(ex.status)} />
-                  {statusLabel(ex.status)}
-                </span>
+                <span className="text-xs text-inkfaint">{groups[tagName].length} 条</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {groups[tagName].map((ex) => (
+                  <div key={ex.id} className="clip-card p-4 relative">
+                    <button
+                      onClick={() => deleteExpr(ex.id)}
+                      className="absolute top-2 right-2 text-inkfaint hover:text-redpen"
+                      aria-label="删除"
+                    >
+                      ×
+                    </button>
+                    <div className="font-voice text-lg font-semibold">{ex.en}</div>
+                    <div className="text-sm text-inksoft mt-1 mb-2">{ex.zh}</div>
+                    {ex.example && (
+                      <p className="font-voice italic text-xs text-inkfaint border-l-2 border-linestrong pl-2 mb-3">
+                        {ex.example}
+                      </p>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[10.5px] text-inkfaint flex items-center gap-1">
+                        <span className={"w-1.5 h-1.5 rounded-full " + dotColor(ex.status)} />
+                        {statusLabel(ex.status)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          ));
+        })()
       )}
     </div>
   );
