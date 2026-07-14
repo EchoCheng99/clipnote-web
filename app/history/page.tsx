@@ -57,6 +57,10 @@ export default function HistoryPage() {
               {open === s.id && (
                 <div className="mt-3 text-sm space-y-3">
                   <div>
+                    <p className="section-label mb-1">完整场景</p>
+                    <p className="font-serif leading-7 bg-card2 rounded p-3">{s.scenario_zh}</p>
+                  </div>
+                  <div>
                     <p className="section-label mb-1">你的译文</p>
                     <p className="font-voice">{s.user_en}</p>
                   </div>
